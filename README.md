@@ -6,4 +6,4 @@
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
-[product-logo]: images/logo.png
+[product-logo]: images/logo.jpg

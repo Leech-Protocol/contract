@@ -25,9 +25,8 @@ abstract contract FarmCore is Context, Ownable {
     struct FarmPair {
         uint256 farmServiceId;
         uint256 farmPoolId;
-        IERC20 firstToken;
-        IERC20 secondToken;
         address contractAddress;
+        Network network;
         bool isActive;
     }
 
@@ -36,6 +35,8 @@ abstract contract FarmCore is Context, Ownable {
         string name;
         address depositAddress;
         address withdrawAddress;
+        IERC20 firstToken;
+        IERC20 secondToken;
         bool isActive;
         bool isFarmMoving;
     }
@@ -107,7 +108,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the current owner.
      */
-    function setDepositAddress(uint256 _farmPoolId, address _address) public onlyWhenServiceEnabled onlyOwner {
+    function setDepositAddress(uint256 _farmPoolId, address _address) external onlyWhenServiceEnabled onlyOwner {
        farmPools[_farmPoolId].depositAddress = _address;
     }
 
@@ -116,7 +117,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the current owner.
      */
-    function setWithdrawAddress(uint256 _farmPoolId, address _address) public onlyWhenServiceEnabled onlyOwner {
+    function setWithdrawAddress(uint256 _farmPoolId, address _address) external onlyWhenServiceEnabled onlyOwner {
        farmPools[_farmPoolId].withdrawAddress = _address;
     }
 
@@ -125,7 +126,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin.
      */
-    function setServicePercent(uint256 _percent) public onlyWhenServiceEnabled onlyAdmin {
+    function setServicePercent(uint256 _percent) external onlyWhenServiceEnabled onlyAdmin {
        servicePercent = _percent;
     }
 
@@ -134,7 +135,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the current owner.
      */
-    function startFarmToFarm(uint256 _farmPoolId, uint256 _newFarmPairId) public onlyWhenServiceEnabled onlyOwner {
+    function startFarmToFarm(uint256 _farmPoolId, uint256 _newFarmPairId) external onlyWhenServiceEnabled onlyOwner {
         farmPools[_farmPoolId].farmPairId = _newFarmPairId;
         farmPools[_farmPoolId].isFarmMoving = true;
         emit FarmToFarmMovingStart(block.timestamp, _farmPoolId);
@@ -145,7 +146,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the current owner.
      */
-    function endFarmToFarm(uint256 _farmPoolId) public onlyWhenServiceEnabled onlyOwner {
+    function endFarmToFarm(uint256 _farmPoolId) external onlyWhenServiceEnabled onlyOwner {
          farmPools[_farmPoolId].isFarmMoving = false;
         emit FarmToFarmMovingEnd(block.timestamp, _farmPoolId);
     }
@@ -167,7 +168,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the current owner.
      */
-    function removeAdmin(address _address, uint256 _index) public onlyWhenServiceEnabled onlyOwner {
+    function removeAdmin(address _address, uint256 _index) external onlyWhenServiceEnabled onlyOwner {
         isAdmin[_address] = false;
         adminsList[_index] = adminsList[adminsList.length - 1];
         adminsList.pop();
@@ -180,7 +181,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin address.
      */
-    function disableService() public onlyWhenServiceEnabled onlyAdmin {
+    function disableService() external onlyWhenServiceEnabled onlyAdmin {
         serviceDisabled = true;
         emit ServiceDisabled();
     }
@@ -190,7 +191,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin address.
      */
-    function enableService() public onlyAdmin {
+    function enableService() external onlyAdmin {
         serviceDisabled = false;
         emit ServiceEnabled();
     }
@@ -200,7 +201,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin address.
      */
-    function setMINTVL(uint256 _value) public onlyWhenServiceEnabled onlyAdmin {
+    function setMINTVL(uint256 _value) external onlyWhenServiceEnabled onlyAdmin {
         MINTVL = _value;
         emit MINTVLUpdated(_value);
     }
@@ -210,7 +211,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin address.
      */
-    function setCAPY(uint256 _value) public onlyWhenServiceEnabled onlyAdmin {
+    function setCAPY(uint256 _value) external onlyWhenServiceEnabled onlyAdmin {
         CAPY = _value;
         emit CAPYUpdated(_value);
     }
@@ -220,7 +221,7 @@ abstract contract FarmCore is Context, Ownable {
      *
      * NOTE: Can only be called by the admin address.
      */
-    function setMINAPY(uint256 _value) public onlyWhenServiceEnabled onlyAdmin {
+    function setMINAPY(uint256 _value) external onlyWhenServiceEnabled onlyAdmin {
         MINAPY = _value;
         emit MINAPYUpdated(_value);
     }
@@ -235,7 +236,7 @@ abstract contract FarmCore is Context, Ownable {
         string memory _name,
         Network _network,
         bool _isActive
-    ) public onlyWhenServiceEnabled onlyAdmin {
+    ) external onlyWhenServiceEnabled onlyAdmin {
 
         if (bytes(farmServices[_id].name).length == 0) {
             farmServicesCount++;
@@ -255,10 +256,10 @@ abstract contract FarmCore is Context, Ownable {
         uint256 _id,
         uint256 _farmPairId,
         string memory _name,
-        address _depositAddress,
-        address _withdrawAddress,
+        IERC20 _firstToken,
+        IERC20 _secondToken,
         bool _isActive
-    ) public onlyWhenServiceEnabled onlyAdmin {
+    ) external onlyWhenServiceEnabled onlyAdmin {
 
         if (bytes(farmPools[_id].name).length == 0) {
             farmServicesCount++;
@@ -267,8 +268,10 @@ abstract contract FarmCore is Context, Ownable {
         farmPools[_id] = FarmPool(
             _farmPairId,
             _name,
-            _depositAddress == address(0) ? _depositAddress : farmPools[_id].depositAddress,
-            _withdrawAddress == address(0) ? _withdrawAddress : farmPools[_id].withdrawAddress,
+            farmPools[_id].depositAddress,
+            farmPools[_id].withdrawAddress,
+            _firstToken,
+            _secondToken,
             _isActive,
             farmPools[_id].isFarmMoving
         );
@@ -285,11 +288,10 @@ abstract contract FarmCore is Context, Ownable {
         uint256 _id,
         uint256 _farmServiceId,
         uint256 _farmPoolId,
-        IERC20 _firstToken,
-        IERC20 _secondToken,
         address _contractAddress,
+        Network _network,
         bool _isActive
-    ) public onlyWhenServiceEnabled onlyAdmin {
+    ) external onlyWhenServiceEnabled onlyAdmin {
 
         require(farmServices[_farmServiceId].isActive == true, "Farm service with this ID does not exist or inactive!");
 
@@ -300,9 +302,8 @@ abstract contract FarmCore is Context, Ownable {
         farmPairs[_id] = FarmPair(
             _farmServiceId,
             _farmPoolId,
-            _firstToken,
-            _secondToken,
             _contractAddress,
+            _network,
             _isActive
         );
 

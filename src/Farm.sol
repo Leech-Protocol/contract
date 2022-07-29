@@ -141,7 +141,7 @@ contract Farm is Ownable, FarmCore {
             );
         }
 
-        if (users[_msgSender()].depositCount == 0) {
+        if (users[_msgSender()].depositCount == 0 && users[_msgSender()].withdrawCount == 0) {
             createNewUser(_referral);
         }
 

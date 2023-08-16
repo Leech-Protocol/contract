@@ -13,7 +13,7 @@ Leech Protocol is one of the first Defi 2.0 automatic cross-chain yield aggregat
 ## Available networks
 - BNB Chain
 - Avalanche
-- Otimism
+- Optimism
 
 ## Pools
 
